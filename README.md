@@ -1,3 +1,4 @@
+# easyai-core
 # EasyAI Core v0.1
 
 Worker desacoplado para procesamiento pesado de documentos de EasyTender.
