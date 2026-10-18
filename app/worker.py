@@ -8,7 +8,9 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
-from docling.document_converter import DocumentConverter
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
 from supabase import Client, create_client
 
 from .config import Settings
@@ -42,7 +44,17 @@ class EasyAIWorker:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.supabase: Client = create_client(settings.supabase_url, settings.supabase_service_role_key)
-        self.converter = DocumentConverter()
+        # Render Free has only 512 MB RAM. Avoid OCR and table models by default
+        # for born-digital PDFs; this keeps Docling's memory footprint much lower.
+        pdf_options = PdfPipelineOptions()
+        pdf_options.do_ocr = False
+        pdf_options.do_table_structure = False
+        pdf_options.force_backend_text = True
+        self.converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options),
+            }
+        )
         self._stopping = False
 
     def stop(self) -> None:
